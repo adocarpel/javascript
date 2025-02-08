@@ -1,0 +1,305 @@
+<html>
+<head>
+
+<style>
+    *{
+        left:0pc;
+        top:0px;
+        padding:0pc;
+        margin:0px;
+    }
+    body{
+        background-color:#345678;
+        color:#fefeaa;
+    }
+    .present {
+        background-color:#745678;
+        
+        color:#34ffff;
+        cursor: pointer;
+        
+        width:100%;
+        height:auto;
+
+        display:block;
+        clear:both;
+        float:left;
+        
+    }    
+    .dir{
+        cursor: pointer;
+        display:inline;
+    }
+    .separator{
+        display:inline;
+    }
+    #home_router{
+        cursor:pointer; 
+        display:inline;       
+    }
+</style>
+
+<head>
+
+<body>
+<div id = "root" style="width:100%; clear:both; float:left; display:box; height:auto;height:30px;margin-top:8px;">
+<div id = "home_router">>> </div>
+</div>
+<div id = "display" style="width:100%; clear:both; float:left; display:box; height:auto;">
+</div>
+
+<hr>
+
+
+<script>
+
+var y = [
+  {"type":"directory","name":"prueba","contents":[
+    {"type":"directory","name":"aaa","contents":[
+      {"type":"directory","name":"aaa_aaa","contents":[
+        {"type":"directory","name":"aaa_aaa_aaa"},
+        {"type":"directory","name":"aaa_aaa_bbb"},
+        {"type":"directory","name":"aaa_aaa_ccc"},
+        {"type":"directory","name":"aaa_aaa_ddd"}
+    ]},
+      {"type":"directory","name":"aaa_bbb"},
+      {"type":"directory","name":"aaa_ccc"}
+  ]},
+    {"type":"directory","name":"bbb","contents":[
+      {"type":"directory","name":"bbb_aaa"},
+      {"type":"directory","name":"bbb_bbb"},
+      {"type":"directory","name":"bbb_ccc","contents":[
+        {"type":"directory","name":"bbb_ccc_aaa"},
+        {"type":"directory","name":"bbb_ccc_bbb"},
+        {"type":"directory","name":"bbb_ccc_ccc"},
+        {"type":"directory","name":"bbb_ccc_ddd"}
+    ]},
+      {"type":"directory","name":"bbb_ddd"}
+  ]},
+    {"type":"directory","name":"ccc"},
+    {"type":"directory","name":"ddd"},
+    {"type":"directory","name":"eee"}
+  ]}
+
+];
+
+
+let patron = "display";
+let cont_nodes = 0;
+
+var home_rooter = document.getElementById("home_router");
+home_rooter.addEventListener('click', clickRootDir);
+
+window.onload = function()
+{   
+    contents();
+}
+
+function contents()
+{
+    list = y[0].contents;    
+    traverseJson(list,"display",0);
+
+}
+
+function clickRootDir()
+{
+    let root_directories = document.getElementsByClassName("dir");
+    let separators = document.getElementsByClassName("separator");
+    let this_level = 0;
+    let element_id = "display";
+
+    clearDisplay();
+
+    if (this.id !== "home_router")
+    {
+        let pos = this.id.indexOf("-g");
+        element_id = this.id.substring(pos+2);
+        this_level = getLevel(element_id);        
+
+        
+    }
+    eraseFromLevel(root_directories, this_level);
+    eraseFromLevel(separators, this_level);
+    setRoot(element_id);
+    patron = element_id;
+    contents();
+}
+
+function getLevel(id)
+{
+    let pos1 = 0;
+    let pos2 = 0;
+    let string_level = "";
+    let level = 0;
+    pos1 = id.indexOf("-l");
+    pos2 = id.indexOf("-c");
+    string_level = id.substring(pos1 + 2, pos2);
+    return parseInt(string_level);
+}
+
+function eraseFromLevel(array_cl, level)
+{   
+    let pos = 0;
+    let pos2 = 0;
+    let string_level = "";
+    let cur_level = 0;
+
+    for(e of array_cl)
+    {        
+        pos = e.id.indexOf("-l");
+        pos2 = e.id.indexOf("-c");
+        string_level = e.id.substring(pos+2,pos2);
+        cur_level = parseInt(string_level);
+
+        if(cur_level >= level) e.innerHTML="";
+    } 
+
+    for(e of array_cl)
+    {
+        pos = e.id.indexOf("-l");
+        pos2 = e.id.indexOf("-c");
+        string_level = e.id.substring(pos+2,pos2);
+        cur_level = parseInt(string_level);
+      
+        if(cur_level >= level) e.remove();             
+    } 
+}
+
+function clearDisplay()
+{
+    cont_nodes = 0;
+    let directories = document.getElementsByClassName("present");
+    for(element of directories) element.remove();  
+    document.getElementById("display").innerHTML="";//Necesario también para limpiar
+}
+
+function openDir()
+{
+    //Establecer el directorio actual como el principal (patrón)
+    patron = this.id;
+    clearDisplay();
+    contents();
+    setRoot(this.id);
+}
+
+function traverseJson(json, prev_id, n_prev_level) 
+{ 
+    let node = null;
+    let n_this_level = 0;
+    n_this_level = n_prev_level;
+    let string_level = "";
+    let this_id = "";
+
+    
+    if (typeof json === 'object' && json !== null) 
+    { 
+        // Check if it's an array 
+        if (Array.isArray(json)) { 
+            json.forEach((item, index) => { 
+                //console.log(`Index ${index}:`); 
+                traverseJson(item, prev_id, n_this_level); // Recursive call 
+
+            }); 
+        } else { 
+            // It's an object 
+            for (const key in json) 
+            { 
+                if (json.hasOwnProperty(key)) 
+                { 
+                    //console.log(`Key: ${key}, Value: ${json[key]}`);
+
+                    if(key === 'name')        
+                    {                        
+                        n_this_level = n_prev_level+1;
+                        string_level = n_this_level.toString();
+                        this_id = json[key] + "-l" + string_level + "-c" + cont_nodes;
+                        //console.log(this_id);
+                        
+                        if(prev_id === patron)
+                        {                          
+
+                            node = document.createElement("div");                         
+                            node.setAttribute("id", this_id);
+
+                            node.setAttribute("class", "present");
+                            node.append(json[key]);                 
+                                   
+                            document.getElementById("display").appendChild(node);
+                            node.addEventListener('click', openDir);
+                        }
+                        cont_nodes++;
+                    }
+                    else 
+                    {
+                    //    this_id = "display";
+                    //    n_this_level = 0;
+                    }
+
+                    traverseJson(json[key], this_id, n_this_level); // Recursive call 
+                } 
+            } 
+        } 
+    } else { 
+        // Base case: it's a primitive value 
+        //console.log(`Value: ${json}`); 
+    } 
+} 
+
+
+function setRoot(div)//Colocar la ruta en la parte superior:
+{  
+    if(div === "display") return;
+
+    var rooter = document.getElementById("root");    
+ 
+    let pos = div.indexOf("-l");
+    let dirname = div.substring(0,pos)
+    let node = null;
+
+    //if(n_root_elements > 1)
+    pos = div.indexOf("-l");
+    let pos2 = div.indexOf("-c");
+    let string_level = div.substring(pos+2,pos2);
+    let cur_level = parseInt(string_level);
+
+    if(cur_level > 1)
+    {  
+
+        let separator = "";
+
+        let a_id = "";
+        
+        a_id = "sep"+"-g"+div;
+
+        node = document.createElement("div");
+        node.setAttribute("id", a_id);
+        node.setAttribute("class", "separator");
+        node.append(" | ");       
+        
+        rooter.appendChild(node);
+    }
+
+    let x_id = "";
+    
+    x_id = "dir"+"-g"+div;
+
+    
+    node = document.createElement("div");                         
+    node.setAttribute("id", x_id);
+
+    node.setAttribute("class", "dir");
+    node.append(dirname);       
+    
+    rooter.appendChild(node);
+
+    const  bdispOfs = document.querySelectorAll(".dir");
+    bdispOfs.forEach
+    (
+        (btn) => btn.addEventListener('click', clickRootDir)
+    )
+}
+
+</script>
+<body>
+</html>
